@@ -2,17 +2,16 @@ import os
 import requests
 import json
 import urllib.parse
-import pafy
 import flask
 from flask import Flask, render_template, request, redirect, jsonify, flash, url_for, session
 import psycopg2
 from dotenv import load_dotenv
-import boto3
 import hashlib
 import uuid
 from functools import wraps
 from datetime import datetime
 from difflib import SequenceMatcher
+from messager import Texter
 
 # jsut src for team pics prob
 # still need to do that manually
@@ -22,6 +21,8 @@ from difflib import SequenceMatcher
 # 2 in a row -> + 1
 # 3 in a row -> + 2
 # ...
+
+# put a bunch of weird photos on it, make the ux laughable
 
 ###############################################################
 ########################## SET UP #############################
@@ -50,6 +51,8 @@ except:
     print("DB connection failed")
     exit(1)
 
+texter = Texter()
+
 ###############################################################
 ########################## HELPERS ############################
 ###############################################################
@@ -68,16 +71,25 @@ def find_user(id, username=None):
     return cur.fetchone()
 
 
-def insert_user(og_handle, pw):
+def insert_user(og_handle, pw, number):
     cur = db_conn.cursor()
     handle = og_handle.replace("'", "''")
     pw = generate_password(pw)
+    phone_number = number.replace("'", "")
     cur.execute(f'''
-        INSERT INTO players (handle, pw) VALUES ('{handle}', '{pw}');
+        INSERT INTO players (handle, pw, phone_number, confirmed, paid) VALUES ('{handle}', '{pw}', '{phone_number}', False, False);
     ''')
     db_conn.commit()
     print(f'{og_handle} registered.')
-    return find_user(0, handle)[0]
+
+    user_id = find_user(0, handle)[0]
+    texter.send_text(f"Test message test endpoint {user_id}", phone_number)
+
+    return user_id
+
+
+def confirm_user(idk):
+    pass
 
 
 def generate_password(password):
@@ -88,6 +100,10 @@ def generate_password(password):
     hash_obj.update(password_salted.encode('utf-8'))
     password_hash = hash_obj.hexdigest()
     password_db_string = "$".join([algorithm, salt, password_hash])
+    print("A", algorithm)
+    print("B", salt)
+    print("C", password_salted)
+    print("D", password_hash)
     return password_db_string
 
 
@@ -96,6 +112,10 @@ def check_password(password, password_db_string):
     hash_obj = hashlib.new(algorithm)
     password_salted = salt + password
     hash_obj.update(password_salted.encode('utf-8'))
+    print("E", algorithm)
+    print("F", salt)
+    print("G", password_salted)
+    print("H", hash_obj.hexdigest())
     return hash_obj.hexdigest() == password_hash
 
 
@@ -141,13 +161,10 @@ def register():
         handle = request.form['handle']
         user = find_user(0, handle)
         if not user:   
-            ip = request.remote_addr
-            code = request.form['code']
-            generated_code = generate_password(code)
-            id = insert_user(handle, generated_code)
+            code = request.form['pw']
+            number = request.form['number']
+            id = insert_user(handle, code, number)
             session['user'] = handle
-            remove_machine_registration(ip)
-            insert_machine_registration(ip, id)
             print(f"Registration for '{handle}' complete.")
 
             return redirect(url_for('index'))
@@ -161,21 +178,13 @@ def register():
 def validate():
     if request.method == 'POST':
         handle = request.form['handle']
-        code = request.form['code']
-        ip = request.remote_addr
+        code = request.form['pw']
         me = find_user(0, handle)
 
-        if me[0] == None or not check_password(code, me[2]):
+        if not me or me[0] == None or not check_password(code, me[2]):
             return render_template('validate.html', message='Incorrect login.')
 
         session['user'] = me[1]
-
-        found_id = find_ip(ip)
-        if not found_id:
-            insert_machine_registration(ip, me[0])
-        elif found_id != me[0]:
-            remove_machine_registration(ip)
-            insert_machine_registration(ip, me[0])
 
         return redirect(url_for('index'))
 
@@ -185,5 +194,10 @@ def validate():
 @app.route('/logout', methods=['POST'])
 @login_required
 def logout():
+    print(f"Logging {session['user']} out.")
     session.clear()
     return redirect(url_for('validate'))
+
+
+if __name__ == '__main__':
+    app.run()

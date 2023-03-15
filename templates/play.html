@@ -4,7 +4,10 @@
 
 {% block content %}
 <div>
-    okay
+    <form action="{{ url_for('logout') }}" name="logout" method="post" enctype="multipart/form-data">
+            <input type="submit" name="logout" value="Log Out"/>
+     </form>
+    Okay
 </div>
 <script>
 

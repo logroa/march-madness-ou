@@ -10,9 +10,11 @@
 
     <form method="post">
 
+        <h2>Register</h2>
+
         After registering, venmo $5 to @happyman3 with "MMOU - your username".  It's fine if you don't, but you won't be
         eligible for any winnings at the end of the tournament.
-
+        <br/>
         Payout breakdown:
         1st - 50% of the pot
         2nd - 20% of the pot
@@ -20,19 +22,25 @@
         Last - your money back
 
         Longest Streak - 15% of the pot
-
+        <br/>
         <div class="validatebox">
             Pick a username
             <input type="text" name="handle"
-                placeholder="Username" class="validateinput"
+                placeholder="please" class="validateinput"
                 value="{{ request.form['handle'] }}">
-            </input>
+            </input><br/>
 
             Make a password
             <input type="text" name="pw"
-                placeholder="Year" class="validateinput"
+                placeholder="thank you" class="validateinput"
                 value="{{ request.form['pw'] }}">
-            </input>
+            </input><br/>
+
+            Gimme ur phone number
+            <input type="text" name="number"
+                placeholder="not weird i promise" class="validateinput"
+                value="{{ request.form['number'] }}">
+            </input><br/>
 
         </div></br>
 
@@ -41,3 +49,4 @@
         </div>
     </form>
 </div>
+{% endblock %}

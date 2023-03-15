@@ -11,7 +11,7 @@
             for each Sweet 16 game and so on.  Win streaks will also offer additional points.  Based on start time of the games, 
             two correct picks in a row adds earns an additonal point, three earns an additional 2 points, four earns an additional 
             3 points, and so on.
-
+            <br/>
             Payout breakdown:
             1st - 50% of the pot
             2nd - 20% of the pot
@@ -25,18 +25,17 @@
             {{ message }}
         </div> <br/>
 
-        Want to login?
+        Login
 
         <div class="validatebox">
-            What's your username?
+
             <input type="text" name="handle"
                 placeholder="Username" class="validateinput"
                 value="{{ request.form['handle'] }}">
             </input>
 
-            Password?
             <input type="text" name="pw"
-                placeholder="Year" class="validateinput"
+                placeholder="Password" class="validateinput"
                 value="{{ request.form['pw'] }}">
             </input>
 
@@ -54,3 +53,4 @@
         <input type="submit" name="Quickly Register" value="register"/>
     </form>
 </div>
+{% endblock %}
