@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div>
+    <div id="regmessage">
+        {{ message }}
+    </div>
+
+    <form method="post">
+
+        After registering, venmo $5 to @happyman3 with "MMOU - your username".  It's fine if you don't, but you won't be
+        eligible for any winnings at the end of the tournament.
+
+        Payout breakdown:
+        1st - 50% of the pot
+        2nd - 20% of the pot
+        3rd - 10% of the pot
+        Last - your money back
+
+        Longest Streak - 15% of the pot
+
+        <div class="validatebox">
+            Pick a username
+            <input type="text" name="handle"
+                placeholder="Username" class="validateinput"
+                value="{{ request.form['handle'] }}">
+            </input>
+
+            Make a password
+            <input type="text" name="pw"
+                placeholder="Year" class="validateinput"
+                value="{{ request.form['pw'] }}">
+            </input>
+
+        </div></br>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Register</button>
+        </div>
+    </form>
+</div>

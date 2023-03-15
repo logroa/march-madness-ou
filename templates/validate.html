@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Log In{% endblock %}
+
+{% block content %}
+<div>
+    <form method="post">
+        <div id="gameexplanation">
+            March Madness Over Unders - For each game in the tournament, pick if the over or under is going to hit. Scoring 
+            will double each round, starting at 1 point for each Round of 64 game, 2 points for each Round of 32 game, 4 points 
+            for each Sweet 16 game and so on.  Win streaks will also offer additional points.  Based on start time of the games, 
+            two correct picks in a row adds earns an additonal point, three earns an additional 2 points, four earns an additional 
+            3 points, and so on.
+
+            Payout breakdown:
+            1st - 50% of the pot
+            2nd - 20% of the pot
+            3rd - 10% of the pot
+            Last - your money back
+
+            Longest Streak - 15% of the pot
+        </div> <br/>
+
+        <div id="valmessage">
+            {{ message }}
+        </div> <br/>
+
+        Want to login?
+
+        <div class="validatebox">
+            What's your username?
+            <input type="text" name="handle"
+                placeholder="Username" class="validateinput"
+                value="{{ request.form['handle'] }}">
+            </input>
+
+            Password?
+            <input type="text" name="pw"
+                placeholder="Year" class="validateinput"
+                value="{{ request.form['pw'] }}">
+            </input>
+
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Log In</button>
+        </div>
+    </form>
+
+    <br/><br/>
+
+    <form action="{{ url_for('register') }}" name="register" method="get" enctype="multipart/form-data">
+        Don't have an account? <br/>
+        <input type="submit" name="Quickly Register" value="register"/>
+    </form>
+</div>

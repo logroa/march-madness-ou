@@ -23,7 +23,8 @@ CREATE TABLE IF NOT EXISTS players (
     handle VARCHAR(100) NOT NULL,
     pw VARCHAR(200) NOT NULL,
     phone_number VARCHAR(20),
-    confirmed BOOLEAN
+    confirmed BOOLEAN,
+    paid BOOLEAN
 );
 
 CREATE TABLE IF NOT EXISTS picks (

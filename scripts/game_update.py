@@ -192,4 +192,5 @@ def db_cron(date):
             )
 
 
-db_cron("20230316")
+for d in ['20230316']: #'20230317']:
+    db_cron(d)
