@@ -1,15 +1,20 @@
-CREATE TABLE IF NOT EXISTS games (
+CREATE TABLE IF NOT EXISTS teams (
     id SERIAL PRIMARY KEY,
+    team_name VARCHAR(100),
+    seed INTEGER,
+    team_pic VARCHAR(200)
+);
+
+CREATE TABLE IF NOT EXISTS games (
+    id INTEGER PRIMARY KEY,
     round VARCHAR(20),
-    team1 VARCHAR(50),
+    date_played VARCHAR(20),
+    team1 INTEGER REFERENCES teams (id),
     team1score INTEGER,
-    team2 VARCHAR(50),
+    team2 INTEGER REFERENCES teams (id),
     team2score INTEGER,
     overunder FLOAT,
-    starttime TIMESTAMP,
     started BOOLEAN,
-    half VARCHAR(10),
-    time_remaining VARCHAR(20),
     finished BOOLEAN
 );
 
@@ -26,4 +31,11 @@ CREATE TABLE IF NOT EXISTS picks (
     player_id INTEGER REFERENCES players (id),
     over_picked BOOLEAN,
     correct BOOLEAN
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+    game_id INTEGER REFERENCES games (id),
+    player_id INTEGER REFERENCES players (id),
+    comment_text VARCHAR (200),
+    posted_at TIMESTAMP
 );
