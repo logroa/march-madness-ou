@@ -55,6 +55,15 @@ except:
 
 texter = Texter()
 
+num_2_round = {
+    1: "Round of 64",
+    2: "Round of 32",
+    3: "Sweet 16",
+    4: "Elite 8",
+    5: "Final 4",
+    6: "Championship"
+}
+
 ###############################################################
 ########################## HELPERS ############################
 ###############################################################
@@ -101,6 +110,104 @@ def confirm_user(user_id):
     return cur.fetchone()
 
 
+def get_games():
+    query = f'''SELECT g.id, g.day_order, g.round, g.date_played, g.team1, t1.team_name as t1name, t1.seed as t1seed, g.team1score,
+                t2.team_name as t2name, t2.seed as t2seed, g.team2score, g.overunder, g.started, g.finished, g.overhit
+                FROM games g 
+                INNER JOIN teams t1 ON g.team1 = t1.id 
+                INNER JOIN teams t2 ON g.team2 = t2.id 
+                ORDER BY g.round DESC, g.date_played, g.day_order;'''
+    cur = db_conn.cursor()
+    cur.execute(query)
+    rows = cur.fetchall()
+    games = [
+        {
+            "id": dr[0],
+            "day_order": dr[1],
+            "round": dr[2],
+            "date_played": f"{dr[3][:4]}-{dr[3][4:6]}-{dr[3][6:]}",
+            "team1": dr[4],
+            "t1name": dr[5],
+            "t1seed": dr[6],
+            "team1score": dr[7],
+            "t2name": dr[8],
+            "t2seed": dr[9],
+            "team2score": dr[10],
+            "overunder": dr[11],
+            "started": dr[12],
+            "finished": dr[13],
+            "overhit": dr[14]
+        } for dr in rows
+    ]
+    return games
+
+
+def get_user_picks(games, user_id):
+    cur = db_conn.cursor()
+    cur.execute(f'''SELECT game_id, over_picked FROM picks WHERE player_id = {user_id};''')
+    picks = cur.fetchall()
+    for pick in picks:
+        for i in range(len(games)):
+            if games[i]['id'] == pick[0]:
+                games[i]['over_picked'] = pick[1]
+    return games
+
+
+def get_orged(games):
+    orged = []
+    layer = {
+        "round_name": num_2_round[games[0]["round"]],
+        "dates": [
+            {
+                "date": games[0]["date_played"],
+                "games": [games[0]]
+            }
+        ]
+    }
+    for g in games[1:]:
+        if layer["round_name"] == num_2_round[g["round"]]:
+            if layer["dates"][-1]["date"] == g["date_played"]:
+                layer["dates"][-1]["games"].append(g)
+            else:
+                layer["dates"].append(
+                    {
+                        "date": g["date_played"],
+                        "games": [g]
+                    }
+                )
+        else:
+            orged.append(layer)
+            layer = {
+                "round_name": num_2_round[g["round"]],
+                "dates": [
+                    {
+                        "date": g["date_played"],
+                        "games": [g]
+                    }
+                ]
+            }
+    orged.append(layer)
+    return orged
+
+
+def insert_picks(picks, user_id):
+    cur = db_conn.cursor()
+    for pick in picks:
+        if pick[1]:
+            cur.execute(f'''SELECT COUNT(1) FROM picks WHERE player_id = {user_id} AND game_id = {pick[0]};''')
+            res = cur.fetchone()
+            over = True
+            if pick[1] == 'U':
+                over = False
+            if res[0]:
+                # update
+                cur.execute(f'''UPDATE picks SET over_picked = {over} WHERE player_id = {user_id} AND game_id = {pick[0]};''')
+            else:
+                # insert
+                cur.execute(f'''INSERT INTO picks (player_id, game_id, over_picked) VALUES ({user_id}, {pick[0]}, {over});''')
+            db_conn.commit()
+
+
 def generate_password(password):
     algorithm = 'sha512'
     salt = uuid.uuid4().hex
@@ -109,10 +216,6 @@ def generate_password(password):
     hash_obj.update(password_salted.encode('utf-8'))
     password_hash = hash_obj.hexdigest()
     password_db_string = "$".join([algorithm, salt, password_hash])
-    print("A", algorithm)
-    print("B", salt)
-    print("C", password_salted)
-    print("D", password_hash)
     return password_db_string
 
 
@@ -121,10 +224,6 @@ def check_password(password, password_db_string):
     hash_obj = hashlib.new(algorithm)
     password_salted = salt + password
     hash_obj.update(password_salted.encode('utf-8'))
-    print("E", algorithm)
-    print("F", salt)
-    print("G", password_salted)
-    print("H", hash_obj.hexdigest())
     return hash_obj.hexdigest() == password_hash
 
 
@@ -161,7 +260,11 @@ def admin_login_required(f):
 @app.route('/', methods=['GET'])
 @login_required
 def index():
-    return render_template('play.html', username=session['user'])
+
+    games = get_games()
+    user_games = get_user_picks(games, find_user(0, session['user'])[0])
+    orged = get_orged(user_games)    
+    return render_template('play.html', username=session['user'], orged = orged)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -207,11 +310,29 @@ def logout():
     session.clear()
     return redirect(url_for('validate'))
 
+
 @app.route('/confirm/<id>', methods=['GET'])
 def confirm(id):
     user = confirm_user(id)
     return render_template('confirmation.html', username=user[1])
 
+
+@app.route('/makepicks', methods=['POST'])
+@login_required
+def make_picks():
+    game_ids = [g['id'] for g in get_games()]
+    picks = []
+    for id in game_ids:
+        try:
+            pick = request.form[str(id)]
+        except:
+            pick = None
+        picks.append((id, pick))
+
+    user_id = find_user(0, session['user'])[0]
+    insert_picks(picks, user_id)
+    
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run()

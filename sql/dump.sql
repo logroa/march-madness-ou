@@ -7,15 +7,17 @@ CREATE TABLE IF NOT EXISTS teams (
 
 CREATE TABLE IF NOT EXISTS games (
     id INTEGER PRIMARY KEY,
-    round VARCHAR(20),
+    round INTEGER,
     date_played VARCHAR(20),
+    day_order INTEGER,
     team1 INTEGER REFERENCES teams (id),
     team1score INTEGER,
     team2 INTEGER REFERENCES teams (id),
     team2score INTEGER,
     overunder FLOAT,
     started BOOLEAN,
-    finished BOOLEAN
+    finished BOOLEAN,
+    overhit BOOLEAN
 );
 
 CREATE TABLE IF NOT EXISTS players (
@@ -30,8 +32,8 @@ CREATE TABLE IF NOT EXISTS players (
 CREATE TABLE IF NOT EXISTS picks (
     game_id INTEGER REFERENCES games (id),
     player_id INTEGER REFERENCES players (id),
-    over_picked BOOLEAN,
-    correct BOOLEAN
+    PRIMARY KEY (game_id, player_id),
+    over_picked BOOLEAN
 );
 
 CREATE TABLE IF NOT EXISTS comments (

@@ -20,10 +20,10 @@ conn = psycopg2.connect(
 )
 
 DAYS_2_ROUND = {
-    '20230316': 'Round of 64',
-    '20230317': 'Round of 64',
-    '20230318': 'Round of 32',
-    '20230319': 'Round of 32'
+    '20230316': 1,
+    '20230317': 1,
+    '20230318': 2,
+    '20230319': 2
 }
 
 # edge cases for not started games, games in progress, and finished games
@@ -34,6 +34,7 @@ def request_page(date):
     page = BeautifulSoup(page_raw.content, 'html.parser')
     scoreboards = page.find_all('section', class_='Scoreboard')
     results = []
+    order = 1
     for sb in scoreboards:
         game = {}
         count = 1
@@ -41,9 +42,6 @@ def request_page(date):
         game['id'] = sb.attrs['id']
         game['done'] = False
         for team in lis:
-            pic = team.find('img')
-            # print(pic)
-            # print(pic.attrs['src'])
             seed = team.find('div', class_='ScoreCell__Rank').text
             team_name = team.find('div', class_='ScoreCell__TeamName').text
             # games that have yet to start
@@ -64,10 +62,12 @@ def request_page(date):
         except:
             ou = "0"
         game['overunder'] = ou
+        game['day_order'] = order
 
         if len(game_info) == 1:
             game['done'] = True
         results.append(game)
+        order += 1
 
     return results
 
@@ -75,7 +75,8 @@ def request_page(date):
 def check_exists(table, column, value):
     query = f'''SELECT COUNT(1) FROM {table} WHERE {column}='''
     if type(value) == str:
-        query += f"'{value}';"
+        real_value = value.replace("'", "''")
+        query += f"'{real_value}';"
     else:
         query += f"{value};"
 
@@ -88,7 +89,8 @@ def check_exists(table, column, value):
 def get_prim_key(prim_key_column, table, column, value):
     query = f'''SELECT {prim_key_column} FROM {table} WHERE {column} = '''
     if type(value) == str:
-        query += f"'{value}';"
+        real_value = value.replace("'", "''")
+        query += f"'{real_value}';"
     else:
         query += f"{value};"
     cur = conn.cursor()
@@ -104,7 +106,8 @@ def insert_into(table, data):
     for k in data.keys():
         cols += f'{k}, '
         if type(data[k]) == str:
-            vals += f"'{data[k]}', "
+            real_data = data[k].replace("'", "''")
+            vals += f"'{real_data}', "
         else:
             vals += f"{data[k]}, "
     cols = cols[:-2]
@@ -120,18 +123,31 @@ def update_please(table, data, column, value):
     for k in data.keys():
         query += f"{k} = "
         if type(data[k]) == str:
-            query += f"'{data[k]}', "
+            real_data = data[k].replace("'", "''")
+            query += f"'{real_data}', "
         else:
             query += f"{data[k]}, "
     query = query[:-2] + " "
     query += f"WHERE {column} = "
     if type(value) == str:
-        query += f"'{value}';"
+        real_value = value.replace("'", "''")
+        query += f"'{real_value}';"
     else:
         query += f"{value};"
     cur = conn.cursor()
     cur.execute(query)
     conn.commit()
+
+
+def compute_overunder_results():
+    query = f'''SELECT id, team1score, team2score, overunder, finished, overhit FROM games;'''
+    cur = conn.cursor()
+    cur.execute(query)
+    rows = cur.fetchall()
+    for row in rows:
+        if row[1] + row[2] > row[3]:
+            update_please('games', {'overhit': True}, 'id', row[0])
+            conn.commit()
 
 
 # don't change o/u if game is alredy in DB
@@ -166,13 +182,15 @@ def db_cron(date):
                     'id': id,
                     'round': DAYS_2_ROUND[date],
                     'date_played': date,
+                    'day_order': game['day_order'],
                     'team1': team1id,
                     'team2': team2id,
                     'team1score': int(game['team1score']),
                     'team2score': int(game['team2score']),
                     'overunder': float(game['overunder']),
                     'started': False,
-                    'finished': False
+                    'finished': False,
+                    'overhit': False
                 }
             )
         else:
@@ -190,7 +208,7 @@ def db_cron(date):
                 'id',
                 id
             )
+    compute_overunder_results()
 
-
-for d in ['20230316']: #'20230317']:
+for d in ['20230316', '20230317']:
     db_cron(d)

@@ -1,0 +1,26 @@
+.sortbuttons {
+    text-align: middle;
+}
+
+.datebuttons {
+    align-items: center;
+    justify-content: center;
+    padding: 10px;    
+}
+
+#sortbuttonsbox {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+}
+
+.shown {
+    display: block;
+}
+
+.hidden {
+    display: hidden;
+}

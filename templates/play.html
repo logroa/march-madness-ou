@@ -3,10 +3,69 @@
 {% block title %}Over unders{% endblock %}
 
 {% block content %}
-<div>
-    <form action="{{ url_for('logout') }}" name="logout" method="post" enctype="multipart/form-data">
-            <input type="submit" name="logout" value="Log Out"/>
-     </form>
-    Okay
+<form action="{{ url_for('logout') }}" name="logout" method="post" enctype="multipart/form-data">
+    <input type="submit" name="logout" value="Log Out"/>
+</form>
+
+<div id="gameexplanation">
+    March Madness Over Unders - For each game in the tournament, pick if the over or under is going to hit. Scoring 
+    will double each round, starting at 1 point for each Round of 64 game, 2 points for each Round of 32 game, 4 points 
+    for each Sweet 16 game and so on.  Win streaks will also offer additional points.  Based on start time of the games, 
+    two correct picks in a row adds earns an additonal point, three earns an additional 2 points, four earns an additional 
+    3 points, and so on.
+    <br/><br/>
+    Payout breakdown:<br/>
+    1st - 50% of the pot<br/>
+    2nd - 20% of the pot<br/>
+    3rd - 10% of the pot<br/>
+    Last - your money back<br/>
+    Longest Streak - 15% of the pot
+    <br/><br/>
+    Point of clarity: pushes count as unders
+    
+</div> <br/>
+<div class="picksbox">
+    <form action="{{ url_for('make_picks') }}" name="picksform" method="post" enctype="multipart/form-data">
+        <div id="gamecatalog">
+            {% for o in orged %}
+                <h2>{{ o.round_name }}</h2> <br/>
+                {% for d in o.dates %}
+                    <h4>{{ d.date }}</h4> <br/>
+                    {% for g in d.games %}
+
+                        <div>
+                            <div>
+                                {{ g.t1seed }} {{ g.t1name }} {{ g.team1score }}
+                            </div>
+                            <div>
+                                {{ g.t2seed }} {{ g.t2name }} {{ g.team2score }}
+                            </div>
+                            <input type="radio" id="{{ g.id }}over" name="{{ g.id }}" value="O" 
+                                {% if g.over_picked is defined and g.over_picked %}
+                                    checked
+                                {% endif %}
+                            >
+                            <label for="{{ g.id }}over">Over {{ g.overunder }}</label><br>
+                            <input type="radio" id="{{ g.id }}under" name="{{ g.id }}" value="U"
+                                {% if g.over_picked is defined and not g.over_picked %}
+                                    checked
+                                {% endif %}                
+                            >
+                            <label for="{{ g.id }}under">Under {{ g.overunder }}</label><br>
+                        </div>
+                        
+                        <br/>
+                    {% endfor %}
+                {% endfor %}
+            {% endfor %}
+        </div>
+
+        <input type="submit" value="Submit picks">
+    </form>
 </div>
+
+<script>
+    
+</script>
+
 {% endblock %}

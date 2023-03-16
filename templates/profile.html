@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ username }}{% endblock %}
+
+{% block content %}
+<div>
+    <form action="{{ url_for('logout') }}" name="logout" method="post" enctype="multipart/form-data">
+        <input type="submit" name="logout" value="Log Out"/>
+    </form>
+</div>
+{% endblock %}
