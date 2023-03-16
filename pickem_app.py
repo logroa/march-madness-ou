@@ -40,6 +40,8 @@ DB_ENDPOINT = os.getenv('DB_ENDPOINT')
 
 API_URL = os.getenv('API_URL')
 
+DEBUG = os.getenv('DEBUG')
+
 try:
     db_conn = psycopg2.connect(
         database=DB_NAME,
@@ -335,4 +337,6 @@ def make_picks():
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    app.run()
+    app.run(
+        debug=DEBUG
+    )
