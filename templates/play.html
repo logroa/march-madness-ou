@@ -44,12 +44,20 @@
                                 {% if g.over_picked is defined and g.over_picked %}
                                     checked
                                 {% endif %}
+
+                                {% if g.started or g.finished %}
+                                    disabled
+                                {% endif %}
                             >
                             <label for="{{ g.id }}over">Over {{ g.overunder }}</label><br>
                             <input type="radio" id="{{ g.id }}under" name="{{ g.id }}" value="U"
                                 {% if g.over_picked is defined and not g.over_picked %}
                                     checked
-                                {% endif %}                
+                                {% endif %}  
+                                
+                                {% if g.started or g.finished %}
+                                    disabled
+                                {% endif %}
                             >
                             <label for="{{ g.id }}under">Under {{ g.overunder }}</label><br>
                         </div>
