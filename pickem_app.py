@@ -38,6 +38,8 @@ DB_PORT = os.getenv('DB_PORT')
 DB_NAME = os.getenv('DB_NAME')
 DB_ENDPOINT = os.getenv('DB_ENDPOINT')
 
+API_URL = os.getenv('API_URL')
+
 try:
     db_conn = psycopg2.connect(
         database=DB_NAME,
@@ -83,13 +85,20 @@ def insert_user(og_handle, pw, number):
     print(f'{og_handle} registered.')
 
     user_id = find_user(0, handle)[0]
-    texter.send_text(f"Test message test endpoint {user_id}", phone_number)
+    texter.send_text(f'''Click the link below to verify this phone number for {handle} 
+                      for March Madness OverUnders. \n\n
+                      {API_URL}/confirm/{user_id}''', phone_number)
 
     return user_id
 
 
-def confirm_user(idk):
-    pass
+def confirm_user(user_id):
+    query = f'''UPDATE players SET confirmed = True WHERE id = {user_id}'''
+    cur = db_conn.cursor()
+    cur.execute(query)
+    db_conn.commit()
+    cur.execute(f'''SELECT * FROM players WHERE id = {user_id}''')
+    return cur.fetchone()
 
 
 def generate_password(password):
@@ -152,7 +161,7 @@ def admin_login_required(f):
 @app.route('/', methods=['GET'])
 @login_required
 def index():
-    return render_template('play.html')
+    return render_template('play.html', username=session['user'])
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -197,6 +206,11 @@ def logout():
     print(f"Logging {session['user']} out.")
     session.clear()
     return redirect(url_for('validate'))
+
+@app.route('/confirm/<id>', methods=['GET'])
+def confirm(id):
+    user = confirm_user(id)
+    return render_template('confirmation.html', username=user[1])
 
 
 if __name__ == '__main__':
