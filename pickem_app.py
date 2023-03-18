@@ -336,6 +336,13 @@ def make_picks():
     
     return redirect(url_for('index'))
 
+
+@app.route('/leaderboard', methods=['GET'])
+@login_required
+def leaderbaord():
+    pass
+
+
 if __name__ == '__main__':
     app.run(
         debug=DEBUG
