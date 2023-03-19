@@ -339,8 +339,47 @@ def make_picks():
 
 @app.route('/leaderboard', methods=['GET'])
 @login_required
-def leaderbaord():
-    pass
+def leaderboard():
+    query = '''
+        SELECT pl.handle, p.player_id, p.game_id, p.over_picked, g.overhit,
+        g.round, g.date_played, g.day_order
+        FROM picks p
+        INNER JOIN players pl on pl.id = p.player_id
+        INNER JOIN games g ON p.game_id = g.id
+        WHERE g.finished = True
+        ORDER BY p.player_id, g.round, g.date_played, g.day_order;
+    '''
+    cur = db_conn.cursor()
+    cur.execute(query)
+    res = cur.fetchall()
+    final = []
+    ind = {
+        "u": res[0][0],
+        "s": 1 if res[0][3] == res[0][4] else 0 
+    }
+    streak = 0
+    if res[0][3] == res[0][4]:
+        streak += 1
+
+    for r in res[1:]:
+        if r[0] != ind["u"]:
+            final.append(ind)
+            ind = {
+                "u": r[0],
+                "s": 0
+            }
+            streak = 0
+        
+        if r[3] == r[4]:
+            ind["s"] += 1*r[5]
+            streak += 1
+        
+        if r[3] != r[4]:
+            ind["s"] += max(streak-1, 0)
+            streak = 0
+    final.append(ind)
+    final_ordered = sorted(final, key = lambda x: x["s"], reverse = True)
+    return render_template('leaderboard.html', players=final_ordered)
 
 
 if __name__ == '__main__':

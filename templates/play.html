@@ -7,6 +7,10 @@
     <input type="submit" name="logout" value="Log Out"/>
 </form>
 
+<form action="{{ url_for('leaderboard') }}" name="logout" method="get" enctype="multipart/form-data">
+    <input type="submit" name="leaderboard" value="Leaderboard"/>
+</form>
+
 <div id="gameexplanation">
     March Madness Over Unders - For each game in the tournament, pick if the over or under is going to hit. Scoring 
     will double each round, starting at 1 point for each Round of 64 game, 2 points for each Round of 32 game, 4 points 
