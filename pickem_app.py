@@ -60,10 +60,10 @@ texter = Texter()
 num_2_round = {
     1: "Round of 64",
     2: "Round of 32",
-    3: "Sweet 16",
-    4: "Elite 8",
-    5: "Final 4",
-    6: "Championship"
+    4: "Sweet 16",
+    8: "Elite 8",
+    16: "Final 4",
+    32: "Championship"
 }
 
 ###############################################################

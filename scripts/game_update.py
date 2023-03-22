@@ -23,7 +23,11 @@ DAYS_2_ROUND = {
     '20230316': 1,
     '20230317': 1,
     '20230318': 2,
-    '20230319': 2
+    '20230319': 2,
+    '20230323': 4,
+    '20230324': 4,
+    '20230325': 8,
+    '20230326': 8
 }
 
 # edge cases for not started games, games in progress, and finished games
@@ -210,5 +214,5 @@ def db_cron(date):
             )
     compute_overunder_results()
 
-for d in ['20230318','20230319']:
+for d in ['20230323','20230324']:
     db_cron(d)
