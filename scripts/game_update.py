@@ -214,5 +214,5 @@ def db_cron(date):
             )
     compute_overunder_results()
 
-for d in ['20230323','20230324']:
+for d in ['20230325','20230326']:
     db_cron(d)
